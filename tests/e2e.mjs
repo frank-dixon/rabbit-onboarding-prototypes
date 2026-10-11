@@ -212,12 +212,6 @@ if (flows.includes("c")) {
     await page.click("#f-relatives-0-newName >> xpath=ancestor::details[1]/summary");
     await page.fill("#f-relatives-0-newName", "Lily");
     await page.click("[data-next]");
-    await page.waitForSelector("#question:has-text('sire and dam')");
-    await page.selectOption("#f-pedigree-d-ref", "h:3");
-    await page.click("[data-next]");
-    await page.waitForSelector("[data-next]:has-text('Skip')");
-    await page.click("[data-next]");
-    await page.click("[data-next]");
     await page.waitForSelector("#question:has-text('Does this look right?')");
     await page.waitForSelector("text=Cross: 75% Thuringer, 25% Holland Lop");
     await page.click("[data-next]");
@@ -225,6 +219,29 @@ if (flows.includes("c")) {
     await page.goto(BASE);
     await page.waitForSelector("#herd-list:has-text('Hazel C')");
     await page.waitForSelector("#herd-list:has-text('sibling: Lily')");
+  });
+
+  await check("C: has nine questions and never mentions a pedigree", async () => {
+    await page.goto(BASE + "c/");
+    let pages = 0;
+    for (;;) {
+      pages += 1;
+      const text = (await page.locator("main").innerText()).toLowerCase();
+      assert.ok(!text.includes("pedigree"), `question ${pages} mentions a pedigree`);
+      assert.ok(!/great-grand|grandparent/.test(text), `question ${pages} asks about ancestors`);
+      if (await page.locator("#question:has-text('Does this look right?')").count()) break;
+      assert.ok(pages < 20, "too many questions");
+      // Move on without validating by stepping the saved draft forward.
+      await page.evaluate(() => {
+        const key = "rabbit-onboarding-prototypes:v1";
+        const data = JSON.parse(localStorage.getItem(key));
+        data.drafts.c = Object.assign(data.drafts.c || {}, { step: (data.drafts.c?.step || 0) + 1 });
+        localStorage.setItem(key, JSON.stringify(data));
+      });
+      await page.reload();
+    }
+    assert.equal(pages, 9);
+    assert.equal(await page.locator("text=/\\d+\\/9/").count(), 1);
   });
 }
 

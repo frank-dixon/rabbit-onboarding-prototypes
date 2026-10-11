@@ -1,12 +1,13 @@
 /*
  * Prototype C: mobile first, one question per card.
  *
- * The same five steps are split into twelve short questions that read like
- * a conversation and use the rabbit's name once it is known. Answers are
- * large tiles and inputs, and Back and Next live in a bar fixed to the
- * bottom of the screen, where thumbs reach. Enter on a text answer moves
- * on. Optional questions offer Skip until something is filled in. The
- * current card is saved with the draft, so a refresh returns to it.
+ * The basics, breed, and relatives are split into nine short questions
+ * that read like a conversation and use the rabbit's name once it is
+ * known. Answers are large tiles and inputs, and Back and Next live in a
+ * bar fixed to the bottom of the screen, where thumbs reach. Enter on a
+ * text answer moves on. The relatives question is optional and offers Skip
+ * until something is filled in. The current card is saved with the draft,
+ * so a refresh returns to it.
  */
 (function () {
   "use strict";
@@ -33,9 +34,6 @@
       },
     },
     { key: "relatives", optional: true, ask: function () { return "Do you know any of " + who() + "'s relatives?"; } },
-    { key: "pedigree:1", optional: true, ask: function () { return "Who are " + who() + "'s sire and dam?"; } },
-    { key: "pedigree:2", optional: true, ask: function () { return "Do you know " + who() + "'s grandparents?"; } },
-    { key: "pedigree:3", optional: true, ask: function () { return "Any great-grandparents?"; }, hint: "Fill in what you know and skip the rest." },
     { key: "review", ask: function () { return "Does this look right?"; } },
   ];
   draft.step = Math.min(Math.max(Number(draft.step) || 0, 0), QUESTIONS.length - 1);
@@ -47,21 +45,12 @@
     if (question.key === "relatives") {
       return draft.relatives.length > 0;
     }
-    if (question.key.indexOf("pedigree:") === 0) {
-      const generation = Number(question.key.split(":")[1]);
-      return P.PEDIGREE.some(function (position) {
-        return position.length === generation && P.slotFilled(draft.pedigree[position]);
-      });
-    }
     return true;
   }
 
   function fieldsFor(question) {
     if (question.key === "review") {
-      return P.renderReview(draft);
-    }
-    if (question.key.indexOf("pedigree:") === 0) {
-      return P.renderField("pedigree", draft, { large: true, generations: [Number(question.key.split(":")[1])] });
+      return P.renderReview(draft, { pedigree: false });
     }
     return P.renderField(question.key, draft, { large: true, quiet: true });
   }
@@ -78,10 +67,6 @@
 
   function render(focusId) {
     const question = QUESTIONS[draft.step];
-    if (question.key === "pedigree:1") {
-      P.prefillPedigree(draft);
-      P.saveDraft(FLOW, draft);
-    }
     const count = QUESTIONS.length;
     const percent = Math.round(((draft.step + 1) / count) * 100);
     app.innerHTML =

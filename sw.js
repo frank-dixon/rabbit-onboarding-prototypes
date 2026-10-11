@@ -7,7 +7,7 @@
  * from the network in the background, so a new deploy shows up on the next
  * visit. Change VERSION when the file list changes to drop the old cache.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "rabbit-onboarding-prototypes-" + VERSION;
 const FILES = [
   "./",

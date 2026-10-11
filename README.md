@@ -11,12 +11,13 @@ no real herd data.
 - **Prototype B** (`b/`): one page of accordion sections that unlock in
   order, with a live summary beside them on wide screens.
 - **Prototype C** (`c/`): mobile first, one question per card, with large
-  tap targets and a bottom bar.
+  tap targets and a bottom bar. It has no pedigree step for now.
 
 All three share the same steps, data, and checks (`assets/shared.js`):
 basics with a native date picker, a purebred breed select or a crossbred
 mix whose percentages must total 100, relatives from the herd or outside
-rabbits, a three-generation pedigree builder, and a review.
+rabbits, a three-generation pedigree builder (A and B only), and a
+review.
 
 The breed list (`assets/breeds.js`) is the 53 ARBA recognized breeds
 (https://arba.net/recognized-breeds/) plus 33 breeds recognized by the

@@ -704,7 +704,10 @@
       '<div class="' + layout + '">' + columns + "</div></div>";
   }
 
-  function renderReview(draft) {
+  /* opts.pedigree === false leaves the pedigree out, for a flow that does
+   * not ask for one. */
+  function renderReview(draft, opts) {
+    opts = opts || {};
     const data = load();
     const rows = [
       ["Name", draft.name],
@@ -733,7 +736,7 @@
         return '<div class="grid grid-cols-3 gap-2 px-3 py-2"><dt class="font-medium">' + row[0] + '</dt><dd class="col-span-2">' + esc(row[1] || "—") + "</dd></div>";
       }).join("") +
       '<div class="px-3 py-2"><dt class="font-medium">Relatives</dt><dd class="mt-1">' + list(relatives, "None") + "</dd></div>" +
-      '<div class="px-3 py-2"><dt class="font-medium">Pedigree (' + pedigree.length + " of " + PEDIGREE.length + ' places)</dt><dd class="mt-1">' + list(pedigree, "None") + "</dd></div>" +
+      (opts.pedigree === false ? "" : '<div class="px-3 py-2"><dt class="font-medium">Pedigree (' + pedigree.length + " of " + PEDIGREE.length + ' places)</dt><dd class="mt-1">' + list(pedigree, "None") + "</dd></div>") +
       "</dl>";
   }
 
