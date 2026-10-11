@@ -49,5 +49,25 @@
     document.getElementById("reset-status").textContent = "Demo data reset.";
   });
 
+  /* Chrome and Edge offer an install prompt; show a button for it. */
+  let installPrompt = null;
+  const installButton = document.getElementById("install-app");
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    installPrompt = event;
+    installButton.hidden = false;
+    document.getElementById("install-extra").textContent = ", or the button below.";
+  });
+  installButton.addEventListener("click", function () {
+    if (!installPrompt) {
+      return;
+    }
+    installPrompt.prompt();
+    installPrompt.userChoice.finally(function () {
+      installPrompt = null;
+      installButton.hidden = true;
+    });
+  });
+
   renderHerd();
 })();

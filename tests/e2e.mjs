@@ -228,6 +228,40 @@ if (flows.includes("c")) {
   });
 }
 
+await check("PWA: manifest, icons, and service worker cache the site for offline use", async () => {
+  await page.goto(BASE);
+  const manifestHref = await page.getAttribute("link[rel=manifest]", "href");
+  const manifestUrl = new URL(manifestHref, page.url()).href;
+  const manifest = await (await page.request.get(manifestUrl)).json();
+  assert.equal(manifest.start_url, "./");
+  assert.equal(manifest.display, "standalone");
+  for (const icon of manifest.icons) {
+    const response = await page.request.get(new URL(icon.src, manifestUrl).href);
+    assert.equal(response.status(), 200, icon.src);
+  }
+  assert.ok(manifest.icons.some((icon) => icon.purpose === "maskable"));
+  await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller !== null, null, { timeout: 15000 })
+    .catch(async () => { await page.reload(); await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 15000 }); });
+  const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
+  assert.ok(scope.endsWith("/rabbit-onboarding-prototypes/"), `scope is ${scope}`);
+  await page.waitForFunction(async () => {
+    const keys = await caches.keys();
+    if (!keys.length) return false;
+    const cache = await caches.open(keys[0]);
+    return (await cache.keys()).length >= 20;
+  }, null, { timeout: 15000 });
+
+  await context.setOffline(true);
+  try {
+    for (const path of ["", "a/", "b/", "c/"]) {
+      await page.goto(BASE + path);
+      await page.waitForSelector(path ? "#app form, #app details" : "#herd-list li");
+    }
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
 for (const line of results) console.log(line);
 if (problems.length) console.log("Browser errors:\n  " + problems.join("\n  "));
 await browser.close();

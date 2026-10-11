@@ -1,0 +1,22 @@
+{
+  "name": "Rabbit Herd: add-a-rabbit prototypes",
+  "short_name": "Rabbit protos",
+  "description": "Throwaway demo of three add-a-rabbit flows. Saves only on this device.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f5f5",
+  "theme_color": "#262626",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Prototype A · Stepper", "url": "a/" },
+    { "name": "Prototype B · Accordion", "url": "b/" },
+    { "name": "Prototype C · Cards", "url": "c/" }
+  ]
+}

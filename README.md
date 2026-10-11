@@ -36,5 +36,11 @@ npm run build   # one minified build; commit assets/app.css
 python3 -m http.server 8000   # then open http://localhost:8000/
 ```
 
+`npm test` runs the rule tests in Node. `npm run e2e` drives Chrome at a
+phone-sized viewport through all three prototypes and the offline check;
+set `BASE_URL` to test the live site, and `CHROME_PATH` if Chrome lives
+somewhere else. When you add or rename a file, add it to `FILES` in
+`sw.js` and bump `VERSION` there.
+
 The compiled stylesheet is committed so GitHub Pages can serve the repo
 as is, with no build step.
