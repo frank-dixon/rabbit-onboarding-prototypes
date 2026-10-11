@@ -124,6 +124,33 @@ test("relatives can list only one dam and one sire", () => {
   assert.deepEqual(plain(P.validate(draft, ["relatives"])), {});
 });
 
+test("a dam or sire taken on one row is not offered on the others", () => {
+  const draft = basics();
+  const choices = (index) => plain(P.relationshipChoices(draft, index)).map((choice) => choice[0]);
+  draft.relatives = [
+    { relationship: "dam", ref: "", newName: "", newDetails: "" },
+    { relationship: "", ref: "", newName: "", newDetails: "" },
+  ];
+  assert.ok(choices(0).includes("dam"));
+  assert.ok(!choices(1).includes("dam"));
+  assert.ok(choices(1).includes("sire"));
+
+  draft.relatives[1].relationship = "sire";
+  assert.ok(!choices(0).includes("sire"));
+
+  draft.relatives[0].relationship = "sibling";
+  assert.ok(choices(1).includes("dam"));
+  draft.relatives.splice(1, 1);
+  assert.ok(choices(0).includes("sire"));
+
+  // An older draft with two dams still shows each row's own choice.
+  draft.relatives = [
+    { relationship: "dam", ref: "", newName: "", newDetails: "" },
+    { relationship: "dam", ref: "", newName: "", newDetails: "" },
+  ];
+  assert.ok(choices(1).includes("dam"));
+});
+
 test("pedigree places check the sex and can be validated one generation at a time", () => {
   const draft = basics();
   draft.pedigree = { s: { ref: "h:1" }, dd: { ref: "h:2" } };

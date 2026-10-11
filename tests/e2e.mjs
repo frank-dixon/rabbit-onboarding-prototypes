@@ -208,6 +208,16 @@ if (flows.includes("c")) {
 
     await page.waitForSelector("[data-next]:has-text('Skip this step')");
     await page.click("[data-action=add-relative]");
+    await page.click("[data-action=add-relative]");
+    await page.selectOption("#f-relatives-0-relationship", "dam");
+    const offers = (row, value) => page.locator(`#f-relatives-${row}-relationship option[value='${value}']`).count();
+    assert.equal(await offers(1, "dam"), 0, "Dam is still offered on the second row");
+    assert.equal(await offers(1, "sire"), 1);
+    assert.equal(await page.evaluate(() => document.activeElement.id), "f-relatives-0-relationship", "focus stays on the changed field");
+    await page.selectOption("#f-relatives-1-relationship", "sire");
+    assert.equal(await offers(0, "sire"), 0, "Sire is still offered on the first row");
+    await page.click("[data-action=remove-relative][data-index='1']");
+    assert.equal(await offers(0, "sire"), 1, "Sire did not come back after removing its row");
     await page.selectOption("#f-relatives-0-relationship", "sibling");
     await page.click("#f-relatives-0-newName >> xpath=ancestor::details[1]/summary");
     await page.fill("#f-relatives-0-newName", "Lily");

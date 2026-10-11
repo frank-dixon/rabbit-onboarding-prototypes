@@ -668,6 +668,24 @@
     return "bg-neutral-100 text-neutral-800";
   }
 
+  /* Relationship choices for one relatives row. A rabbit has one dam and
+   * one sire, so once a row takes Dam or Sire the other rows stop offering
+   * it. The row's own current choice always stays, so an older draft with
+   * two dams still shows what it holds, and the checker flags it. */
+  function relationshipChoices(draft, index) {
+    const takenBy = {};
+    draft.relatives.forEach(function (row, rowIndex) {
+      if ((row.relationship === "dam" || row.relationship === "sire") && takenBy[row.relationship] === undefined) {
+        takenBy[row.relationship] = rowIndex;
+      }
+    });
+    const own = (draft.relatives[index] || {}).relationship;
+    return RELATIONSHIPS.filter(function (choice) {
+      const owner = takenBy[choice[0]];
+      return owner === undefined || owner === index || choice[0] === own;
+    });
+  }
+
   function renderRelatives(draft, opts) {
     const big = opts.large;
     const rows = draft.relatives.map(function (row, index) {
@@ -675,10 +693,10 @@
       return '<li class="space-y-3 rounded-lg border border-neutral-300 bg-white p-3">' +
         '<div class="flex items-center justify-between gap-2"><h3 class="font-semibold">Relative ' + (index + 1) + "</h3>" +
         '<button type="button" class="' + BUTTON_SECONDARY + '" data-action="remove-relative" data-index="' + index + '">Remove<span class="sr-only"> relative ' + (index + 1) + "</span></button></div>" +
-        selectField(base + ".relationship", "Relationship", row.relationship, RELATIONSHIPS, {
+        selectField(base + ".relationship", "Relationship", row.relationship, relationshipChoices(draft, index), {
           large: big,
           placeholder: "Choose a relationship…",
-          help: "Dam means the mother and sire means the father.",
+          help: "Dam means the mother and sire means the father. Each can be listed once.",
         }) +
         slotFields(base, "Rabbit", row, { large: big }) +
         "</li>";
@@ -778,12 +796,18 @@
       if (element.type === "radio" && !element.checked) {
         return;
       }
-      setPath(draft, element.getAttribute("data-bind"), element.value);
+      const path = element.getAttribute("data-bind");
+      setPath(draft, path, element.value);
       saveDraft(flow, draft);
-      clearError(container, element.getAttribute("data-bind"));
+      clearError(container, path);
       refreshLive(container, draft);
       if (hooks.onChange) {
-        hooks.onChange(element.getAttribute("data-bind"));
+        hooks.onChange(path);
+      }
+      // A relationship change can free or take Dam or Sire, which changes
+      // the other rows' choices, so redraw and keep focus on this field.
+      if (/^relatives\.\d+\.relationship$/.test(path) && hooks.onStructure) {
+        hooks.onStructure(idFor(path));
       }
     };
     container.addEventListener("input", onInput);
@@ -922,6 +946,7 @@
     prefillPedigree: prefillPedigree,
     renderField: renderField,
     renderReview: renderReview,
+    relationshipChoices: relationshipChoices,
     breedLine: breedLine,
     refName: refName,
     positionLabel: positionLabel,
