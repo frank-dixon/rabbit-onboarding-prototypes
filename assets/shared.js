@@ -561,13 +561,17 @@
         placeholder: "Not in the list",
         labelClass: opts.labelClass,
       }) +
-      '<div class="grid gap-3 sm:grid-cols-2">' +
-      textField(path + ".newName", "Or a new outside rabbit's name", slot.newName || "", { large: false }) +
+      // The new-rabbit fields sit in a native disclosure so a pedigree of
+      // 14 places stays readable. It opens by itself when it holds a name.
+      '<details class="rounded border border-dashed border-neutral-300 px-3 py-2"' + (slot.newName || slot.newDetails ? " open" : "") + ">" +
+      '<summary class="cursor-pointer text-sm font-medium text-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">Not in the list? Add an outside rabbit</summary>' +
+      '<div class="mt-2 space-y-3">' +
+      textField(path + ".newName", "Outside rabbit's name", slot.newName || "", { large: false }) +
       textField(path + ".newDetails", "Details (optional)", slot.newDetails || "", {
         large: false,
         help: "Ear tag, registration number, breeder, or color.",
       }) +
-      "</div></div>";
+      "</div></details></div>";
   }
 
   /* Render the markup for one field key. opts.large gives bigger targets;

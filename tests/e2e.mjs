@@ -112,6 +112,7 @@ if (flows.includes("a")) {
 
     assert.equal(await page.inputValue("#f-pedigree-d-ref"), "h:1");
     await page.selectOption("#f-pedigree-s-ref", "h:2");
+    await page.click("#f-pedigree-sd-newName >> xpath=ancestor::details[1]/summary");
     await page.fill("#f-pedigree-sd-newName", "Old Rosie");
     await noHorizontalScroll();
     await page.click("button[type=submit]");
@@ -123,6 +124,54 @@ if (flows.includes("a")) {
     await page.goto(BASE);
     await page.waitForSelector("#herd-list:has-text('Hazel A')");
     await page.waitForSelector("#herd-list:has-text('Pedigree: 3 of 14')");
+  });
+}
+
+if (flows.includes("b")) {
+  await check("B: accordion unlocks in order and adds a purebred rabbit", async () => {
+    await page.goto(BASE + "b/");
+    await noHorizontalScroll();
+    assert.equal(await page.getAttribute("#section-breed > summary", "aria-disabled"), "true");
+    await page.click("#section-breed > summary");
+    assert.equal(await page.getAttribute("#section-breed", "open"), null);
+
+    await page.click("[data-continue='0']");
+    await page.waitForSelector("#section-basics [data-error-summary]:has-text('Enter a name')");
+    await page.fill("#f-name", "Hazel B");
+    await page.check("#f-sex-1");
+    await page.fill("#f-birthDate", "2024-06-01");
+    await page.fill("#f-color", "Chestnut");
+    await page.waitForSelector("[data-summary]:has-text('Hazel B')");
+    await page.click("[data-continue='0']");
+    await page.waitForSelector("#section-breed[open]");
+
+    await page.reload();
+    await page.waitForSelector("#section-breed[open]");
+    assert.equal(await page.inputValue("#f-name"), "Hazel B");
+
+    await page.check("#f-breedType-0");
+    await page.selectOption("#f-purebred", "Mini Californian");
+    await page.click("[data-continue='1']");
+    await page.waitForSelector("#section-relatives[open]");
+    await page.click("[data-continue='2']");
+    await page.waitForSelector("#section-pedigree[open]");
+    await page.selectOption("#f-pedigree-d-ref", "h:3");
+    assert.equal(await page.locator("#f-pedigree-s-ref option[value='h:1']").count(), 0, "a doe must not be offered as a sire");
+    await page.selectOption("#f-pedigree-s-ref", "o:52");
+    await page.click("[data-continue='3']");
+    await page.waitForSelector("#section-review[open]");
+    await page.waitForSelector("#section-review:has-text('Mini Californian')");
+    await page.click("[data-save]");
+    await page.waitForSelector("#done-heading:has-text('Hazel B was added')");
+  });
+
+  await check("B: two-column layout on a desktop screen", async () => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(BASE + "b/");
+    const aside = await page.locator("[data-summary]").boundingBox();
+    const sections = await page.locator("[data-sections]").boundingBox();
+    assert.ok(aside.x > sections.x + sections.width - 1, "summary should sit beside the sections");
+    await page.setViewportSize({ width: 390, height: 844 });
   });
 }
 
