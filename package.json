@@ -4,7 +4,8 @@
   "description": "Throwaway static prototypes of the add-a-rabbit flow.",
   "scripts": {
     "build": "tailwindcss -i ./src/input.css -o ./assets/app.css --minify",
-    "watch": "tailwindcss -i ./src/input.css -o ./assets/app.css --watch"
+    "watch": "tailwindcss -i ./src/input.css -o ./assets/app.css --watch",
+    "test": "node --test tests/"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.0",
