@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="app-root" content="./">
+  <meta name="theme-color" content="#262626">
+  <title>Add-a-rabbit prototypes · Rabbit Herd</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <!-- pwa-head -->
+</head>
+<body class="min-h-screen bg-neutral-100 text-neutral-900 antialiased">
+  <a class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:rounded focus:bg-white focus:px-3 focus:py-2" href="#main">Skip to content</a>
+  <header class="border-b border-neutral-300 bg-white">
+    <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+      <a class="font-semibold" href="./">Rabbit Herd · prototypes</a>
+      <span class="rounded bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">Demo · saves on this device only</span>
+    </div>
+  </header>
+  <main id="main" class="mx-auto max-w-3xl space-y-8 px-4 py-8">
+    <section>
+      <h1 class="text-2xl font-semibold tracking-tight">Add a rabbit: three prototypes</h1>
+      <p class="mt-2 leading-relaxed text-neutral-700">Each prototype adds a rabbit to the same demo herd with the same steps: basics, breed (purebred or a crossbred mix totalling 100%), relatives, a pedigree builder, and a review. They differ only in layout. Everything is saved in this browser. Nothing is sent anywhere.</p>
+      <noscript><p class="mt-3 rounded border-2 border-red-800 bg-white p-3 font-medium">These prototypes save to your browser with JavaScript. Please turn JavaScript on.</p></noscript>
+    </section>
+
+    <section aria-labelledby="prototypes-heading">
+      <h2 class="text-lg font-semibold" id="prototypes-heading">Prototypes</h2>
+      <ul class="mt-3 grid gap-3 sm:grid-cols-3">
+        <!-- prototype-links -->
+      </ul>
+    </section>
+
+    <section aria-labelledby="herd-heading">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-semibold" id="herd-heading">Demo herd</h2>
+        <button type="button" id="reset-demo" class="inline-flex min-h-11 items-center rounded border border-red-800 bg-white px-4 py-2 font-medium text-red-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-800">Reset demo data</button>
+      </div>
+      <p class="mt-1 text-sm text-neutral-600">Fake rabbits for testing. Reset puts the demo herd back and clears drafts.</p>
+      <p class="mt-3 text-sm font-medium" role="status" aria-live="polite" id="reset-status"></p>
+      <ul class="mt-3 space-y-2" id="herd-list"></ul>
+    </section>
+  </main>
+  <script src="assets/breeds.js"></script>
+  <script src="assets/shared.js"></script>
+  <script src="assets/index.js"></script>
+</body>
+</html>

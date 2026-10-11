@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Scan the HTML pages and the scripts that build form markup. */
+@source "../index.html";
+@source "../a/index.html";
+@source "../b/index.html";
+@source "../c/index.html";
+@source "../assets/*.js";

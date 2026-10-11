@@ -1,0 +1,13 @@
+{
+  "name": "rabbit-onboarding-prototypes",
+  "private": true,
+  "description": "Throwaway static prototypes of the add-a-rabbit flow.",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./assets/app.css --minify",
+    "watch": "tailwindcss -i ./src/input.css -o ./assets/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}
