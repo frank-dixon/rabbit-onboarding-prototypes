@@ -100,6 +100,24 @@ test("relatives need a relationship and one rabbit, with the right sex for dam a
   assert.match(P.validate(draft, ["relatives"])["relatives.0.newName"], /not both/);
 });
 
+test("relatives can list only one dam and one sire", () => {
+  const draft = basics();
+  draft.relatives = [
+    { relationship: "dam", ref: "h:1", newName: "", newDetails: "" },
+    { relationship: "sire", ref: "h:2", newName: "", newDetails: "" },
+    { relationship: "dam", ref: "h:3", newName: "", newDetails: "" },
+    { relationship: "sire", ref: "h:4", newName: "", newDetails: "" },
+  ];
+  const errors = plain(P.validate(draft, ["relatives"]));
+  assert.equal(errors["relatives.0.relationship"], undefined);
+  assert.equal(errors["relatives.1.relationship"], undefined);
+  assert.match(errors["relatives.2.relationship"], /only one dam.*Relative 1/);
+  assert.match(errors["relatives.3.relationship"], /only one sire.*Relative 2/);
+
+  draft.relatives = draft.relatives.slice(0, 2);
+  assert.deepEqual(plain(P.validate(draft, ["relatives"])), {});
+});
+
 test("pedigree places check the sex and can be validated one generation at a time", () => {
   const draft = basics();
   draft.pedigree = { s: { ref: "h:1" }, dd: { ref: "h:2" } };

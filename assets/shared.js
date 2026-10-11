@@ -305,10 +305,19 @@
         validateBreed(draft, errors);
       }
       if (key === "relatives") {
+        // A rabbit has one dam and one sire, so each can be listed once.
+        const parentSeen = {};
         draft.relatives.forEach(function (row, index) {
           const base = "relatives." + index;
           if (!row.relationship) {
             errors[base + ".relationship"] = "Choose how this rabbit is related.";
+          } else if (row.relationship === "dam" || row.relationship === "sire") {
+            if (parentSeen[row.relationship]) {
+              errors[base + ".relationship"] = "A rabbit has only one " + row.relationship +
+                ". Relative " + parentSeen[row.relationship] + " is already the " + row.relationship + ".";
+            } else {
+              parentSeen[row.relationship] = index + 1;
+            }
           }
           if (!slotFilled(row)) {
             errors[base + ".ref"] = "Pick a rabbit or type an outside rabbit's name.";
