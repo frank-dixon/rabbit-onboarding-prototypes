@@ -175,6 +175,59 @@ if (flows.includes("b")) {
   });
 }
 
+if (flows.includes("c")) {
+  await check("C: one question per card with big targets adds a rabbit", async () => {
+    await page.goto(BASE + "c/");
+    await noHorizontalScroll();
+    await page.fill("#f-name", "Hazel C");
+    await page.press("#f-name", "Enter");
+    await page.waitForSelector("#question:has-text('Is Hazel C a doe or a buck?')");
+    const tile = await page.locator("label[for='f-sex-0']").boundingBox();
+    assert.ok(tile.height >= 56, `tap target is ${tile.height}px tall`);
+    const next = await page.locator("[data-next]").boundingBox();
+    assert.ok(next.y + next.height <= 844 && next.height >= 56, "Next sits in the bottom bar");
+    await page.check("#f-sex-0");
+    await page.click("[data-next]");
+    await page.fill("#f-birthDate", "2024-07-04");
+    await page.click("[data-next]");
+    await page.fill("#f-color", "Fawn");
+    await page.click("[data-next]");
+    await page.click("[data-next]");
+    await page.check("#f-breedType-1");
+    await page.click("[data-next]");
+    await page.waitForSelector("#question:has-text('mix')");
+
+    await page.reload();
+    await page.waitForSelector("#question:has-text('Which breeds are in Hazel C')");
+    await page.selectOption("#f-cross-0-breed", "Thuringer");
+    await page.fill("#f-cross-0-percent", "75");
+    await page.selectOption("#f-cross-1-breed", "Holland Lop");
+    await page.fill("#f-cross-1-percent", "25");
+    await page.waitForSelector("[data-cross-total]:has-text('Ready')");
+    await page.click("[data-next]");
+
+    await page.waitForSelector("[data-next]:has-text('Skip')");
+    await page.click("[data-action=add-relative]");
+    await page.selectOption("#f-relatives-0-relationship", "sibling");
+    await page.click("#f-relatives-0-newName >> xpath=ancestor::details[1]/summary");
+    await page.fill("#f-relatives-0-newName", "Lily");
+    await page.click("[data-next]");
+    await page.waitForSelector("#question:has-text('sire and dam')");
+    await page.selectOption("#f-pedigree-d-ref", "h:3");
+    await page.click("[data-next]");
+    await page.waitForSelector("[data-next]:has-text('Skip')");
+    await page.click("[data-next]");
+    await page.click("[data-next]");
+    await page.waitForSelector("#question:has-text('Does this look right?')");
+    await page.waitForSelector("text=Cross: 75% Thuringer, 25% Holland Lop");
+    await page.click("[data-next]");
+    await page.waitForSelector("#done-heading:has-text('Hazel C was added')");
+    await page.goto(BASE);
+    await page.waitForSelector("#herd-list:has-text('Hazel C')");
+    await page.waitForSelector("#herd-list:has-text('sibling: Lily')");
+  });
+}
+
 for (const line of results) console.log(line);
 if (problems.length) console.log("Browser errors:\n  " + problems.join("\n  "));
 await browser.close();

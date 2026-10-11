@@ -473,7 +473,7 @@
   function textField(path, label, value, opts) {
     const big = opts.large;
     return '<div>' +
-      '<label class="' + (big ? LABEL_LARGE : LABEL) + '" for="' + idFor(path) + '">' + esc(label) + "</label>" +
+      '<label class="' + (opts.quiet ? "sr-only" : big ? LABEL_LARGE : LABEL) + '" for="' + idFor(path) + '">' + esc(label) + "</label>" +
       (opts.help ? '<p class="mt-1 text-sm text-neutral-600" id="' + idFor(path) + '-help">' + esc(opts.help) + "</p>" : "") +
       '<input class="' + (big ? CONTROL_LARGE : CONTROL) + '" id="' + idFor(path) + '" data-bind="' + esc(path) + '"' +
       ' type="' + (opts.type || "text") + '" value="' + esc(value) + '"' +
@@ -517,7 +517,7 @@
         "</span></label>";
     }).join("");
     return '<fieldset id="' + idFor(path) + '">' +
-      '<legend class="' + (big ? LABEL_LARGE : LABEL) + '">' + esc(legend) + "</legend>" +
+      '<legend class="' + (opts.quiet ? "sr-only" : big ? LABEL_LARGE : LABEL) + '">' + esc(legend) + "</legend>" +
       '<div class="mt-2 grid gap-2 ' + (choices.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2") + '">' + tiles + "</div>" +
       errorSlot(path) + "</fieldset>";
   }
@@ -575,23 +575,25 @@
   }
 
   /* Render the markup for one field key. opts.large gives bigger targets;
+   * opts.quiet hides a simple field's label visually when a question
+   * heading already says it (screen readers still hear the label);
    * opts.generations limits the pedigree to some generations. */
   function renderField(key, draft, opts) {
     opts = opts || {};
     const big = opts.large;
     switch (key) {
       case "name":
-        return textField("name", "Name or ear tag", draft.name, { large: big });
+        return textField("name", "Name or ear tag", draft.name, { large: big, quiet: opts.quiet });
       case "sex":
-        return choiceField("sex", "Sex", draft.sex, SEXES, { large: big });
+        return choiceField("sex", "Sex", draft.sex, SEXES, { large: big, quiet: opts.quiet });
       case "birthDate":
-        return textField("birthDate", "Birth date", draft.birthDate, { large: big, type: "date", max: today() });
+        return textField("birthDate", "Birth date", draft.birthDate, { large: big, quiet: opts.quiet, type: "date", max: today() });
       case "color":
-        return textField("color", "Color", draft.color, { large: big, help: "For example: broken black, chestnut agouti." });
+        return textField("color", "Color", draft.color, { large: big, quiet: opts.quiet, help: "For example: broken black, chestnut agouti." });
       case "status":
-        return choiceField("status", "Status", draft.status, STATUSES, { large: big });
+        return choiceField("status", "Status", draft.status, STATUSES, { large: big, quiet: opts.quiet });
       case "breedType":
-        return choiceField("breedType", "Breed type", draft.breedType, BREED_TYPES, { large: big });
+        return choiceField("breedType", "Breed type", draft.breedType, BREED_TYPES, { large: big, quiet: opts.quiet });
       case "breed":
         return renderBreed(draft, opts);
       case "relatives":
