@@ -55,7 +55,7 @@ test("basics are required and the birth date cannot be in the future", () => {
   const empty = P.validate(P.getDraft("a"), ["name", "sex", "birthDate", "color"]);
   assert.deepEqual(plain(Object.keys(empty).sort()), ["birthDate", "color", "name", "sex"]);
   const future = P.validate(basics({ birthDate: "2999-01-01" }), ["birthDate"]);
-  assert.match(future.birthDate, /future/);
+  assert.match(future.birthDate, /^The birth date can't be in the future\. Please pick/);
   assert.deepEqual(plain(P.validate(basics(), ["name", "sex", "birthDate", "color", "status"])), {});
 });
 
@@ -69,10 +69,10 @@ test("a purebred needs a breed from the cited list", () => {
 test("a cross needs two or more distinct breeds totalling 100", () => {
   const draft = basics({ breedType: "crossbred" });
   draft.cross = [{ breed: "Rex", percent: "60" }, { breed: "", percent: "" }];
-  assert.match(P.validate(draft, ["breed"]).cross, /two breeds/);
+  assert.match(P.validate(draft, ["breed"]).cross, /^A crossbred rabbit has at least two breeds\./);
 
   draft.cross = [{ breed: "Rex", percent: "60" }, { breed: "Dutch", percent: "30" }];
-  assert.match(P.validate(draft, ["breed"]).cross, /90%/);
+  assert.match(P.validate(draft, ["breed"]).cross, /^The shares need to add up to exactly 100%, and right now they add up to 90%\./);
 
   draft.cross = [{ breed: "Rex", percent: "50" }, { breed: "Rex", percent: "50" }];
   assert.ok(P.validate(draft, ["breed"])["cross.1.breed"]);
@@ -94,10 +94,13 @@ test("relatives need a relationship and one rabbit, with the right sex for dam a
   assert.ok(errors["relatives.0.ref"]);
 
   draft.relatives = [{ relationship: "dam", ref: "h:2", newName: "", newDetails: "" }];
-  assert.match(P.validate(draft, ["relatives"])["relatives.0.ref"], /buck/);
+  assert.equal(
+    P.validate(draft, ["relatives"])["relatives.0.ref"],
+    "The dam has to be a doe. Bramble is a buck, so pick a doe here."
+  );
 
   draft.relatives = [{ relationship: "sibling", ref: "h:1", newName: "Extra", newDetails: "" }];
-  assert.match(P.validate(draft, ["relatives"])["relatives.0.newName"], /not both/);
+  assert.match(P.validate(draft, ["relatives"])["relatives.0.newName"], /^Each place holds one rabbit\..*not both\.$/);
 });
 
 test("relatives can list only one dam and one sire", () => {
@@ -111,8 +114,11 @@ test("relatives can list only one dam and one sire", () => {
   const errors = plain(P.validate(draft, ["relatives"]));
   assert.equal(errors["relatives.0.relationship"], undefined);
   assert.equal(errors["relatives.1.relationship"], undefined);
-  assert.match(errors["relatives.2.relationship"], /only one dam.*Relative 1/);
-  assert.match(errors["relatives.3.relationship"], /only one sire.*Relative 2/);
+  assert.equal(
+    errors["relatives.2.relationship"],
+    "A rabbit can have only one dam, and Relative 1 is already listed as the dam. Choose a different relationship here."
+  );
+  assert.match(errors["relatives.3.relationship"], /^A rabbit can have only one sire, and Relative 2 is already listed as the sire\./);
 
   draft.relatives = draft.relatives.slice(0, 2);
   assert.deepEqual(plain(P.validate(draft, ["relatives"])), {});
@@ -121,7 +127,11 @@ test("relatives can list only one dam and one sire", () => {
 test("pedigree places check the sex and can be validated one generation at a time", () => {
   const draft = basics();
   draft.pedigree = { s: { ref: "h:1" }, dd: { ref: "h:2" } };
-  assert.ok(P.validate(draft, ["pedigree:1"])["pedigree.s.ref"]);
+  assert.equal(
+    P.validate(draft, ["pedigree:1"])["pedigree.s.ref"],
+    "The sire has to be a buck. Juniper is a doe, so pick a buck here."
+  );
+  assert.match(P.validate(draft, ["pedigree"])["pedigree.dd.ref"], /^The dam's dam has to be a doe\./);
   assert.equal(P.validate(draft, ["pedigree:1"])["pedigree.dd.ref"], undefined);
   assert.ok(P.validate(draft, ["pedigree"])["pedigree.dd.ref"]);
   assert.equal(P.PEDIGREE.length, 14);

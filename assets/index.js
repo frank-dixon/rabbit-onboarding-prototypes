@@ -34,19 +34,19 @@
         const draft = data.drafts[flow];
         badge.hidden = !draft;
         if (draft) {
-          badge.textContent = "Draft in progress" + (draft.name ? ": " + draft.name : "");
+          badge.textContent = draft.name ? "Draft in progress for " + draft.name + "." : "Draft in progress.";
         }
       }
     });
   }
 
   document.getElementById("reset-demo").addEventListener("click", function () {
-    if (!window.confirm("Reset the demo herd and clear all drafts on this device?")) {
+    if (!window.confirm("Reset the demo data? This restores the sample herd and clears any rabbits and drafts you've added on this device.")) {
       return;
     }
     P.reset();
     renderHerd();
-    document.getElementById("reset-status").textContent = "Demo data reset.";
+    document.getElementById("reset-status").textContent = "The demo data has been reset.";
   });
 
   /* Chrome and Edge offer an install prompt; show a button for it. */
@@ -56,7 +56,7 @@
     event.preventDefault();
     installPrompt = event;
     installButton.hidden = false;
-    document.getElementById("install-extra").textContent = ", or the button below.";
+    document.getElementById("install-extra").textContent = ", or use the button below.";
   });
   installButton.addEventListener("click", function () {
     if (!installPrompt) {

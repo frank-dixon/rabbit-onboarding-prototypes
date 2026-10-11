@@ -96,11 +96,11 @@ if (flows.includes("a")) {
     await page.fill("#f-cross-0-percent", "60");
     await page.selectOption("#f-cross-1-breed", "Dutch");
     await page.fill("#f-cross-1-percent", "30");
-    await page.waitForSelector("[data-cross-total]:has-text('10% to go')");
+    await page.waitForSelector("[data-cross-total]:has-text('Add 10% more')");
     await page.click("button[type=submit]");
-    await page.waitForSelector("[data-error-summary]:has-text('must total 100%')");
+    await page.waitForSelector("[data-error-summary]:has-text('add up to exactly 100%')");
     await page.fill("#f-cross-1-percent", "40");
-    await page.waitForSelector("[data-cross-total]:has-text('Ready')");
+    await page.waitForSelector("[data-cross-total]:has-text('The mix adds up')");
     await page.click("button[type=submit]");
     await page.waitForSelector("text=Step 3 of 5");
 
@@ -136,7 +136,7 @@ if (flows.includes("b")) {
     assert.equal(await page.getAttribute("#section-breed", "open"), null);
 
     await page.click("[data-continue='0']");
-    await page.waitForSelector("#section-basics [data-error-summary]:has-text('Enter a name')");
+    await page.waitForSelector("#section-basics [data-error-summary]:has-text('Each rabbit needs a name or an ear tag')");
     await page.fill("#f-name", "Hazel B");
     await page.check("#f-sex-1");
     await page.fill("#f-birthDate", "2024-06-01");
@@ -198,24 +198,24 @@ if (flows.includes("c")) {
     await page.waitForSelector("#question:has-text('mix')");
 
     await page.reload();
-    await page.waitForSelector("#question:has-text('Which breeds are in Hazel C')");
+    await page.waitForSelector("#question:has-text('Which breeds make up Hazel C')");
     await page.selectOption("#f-cross-0-breed", "Thuringer");
     await page.fill("#f-cross-0-percent", "75");
     await page.selectOption("#f-cross-1-breed", "Holland Lop");
     await page.fill("#f-cross-1-percent", "25");
-    await page.waitForSelector("[data-cross-total]:has-text('Ready')");
+    await page.waitForSelector("[data-cross-total]:has-text('The mix adds up')");
     await page.click("[data-next]");
 
-    await page.waitForSelector("[data-next]:has-text('Skip')");
+    await page.waitForSelector("[data-next]:has-text('Skip this step')");
     await page.click("[data-action=add-relative]");
     await page.selectOption("#f-relatives-0-relationship", "sibling");
     await page.click("#f-relatives-0-newName >> xpath=ancestor::details[1]/summary");
     await page.fill("#f-relatives-0-newName", "Lily");
     await page.click("[data-next]");
-    await page.waitForSelector("#question:has-text('Does this look right?')");
+    await page.waitForSelector("#question:has-text('Please check')");
     await page.waitForSelector("text=Cross: 75% Thuringer, 25% Holland Lop");
     await page.click("[data-next]");
-    await page.waitForSelector("#done-heading:has-text('Hazel C was added')");
+    await page.waitForSelector("#done-heading:has-text('Hazel C has been added to your herd')");
     await page.goto(BASE);
     await page.waitForSelector("#herd-list:has-text('Hazel C')");
     await page.waitForSelector("#herd-list:has-text('sibling: Lily')");
@@ -229,7 +229,7 @@ if (flows.includes("c")) {
       const text = (await page.locator("main").innerText()).toLowerCase();
       assert.ok(!text.includes("pedigree"), `question ${pages} mentions a pedigree`);
       assert.ok(!/great-grand|grandparent/.test(text), `question ${pages} asks about ancestors`);
-      if (await page.locator("#question:has-text('Does this look right?')").count()) break;
+      if (await page.locator("#question:has-text('Please check')").count()) break;
       assert.ok(pages < 20, "too many questions");
       // Move on without validating by stepping the saved draft forward.
       await page.evaluate(() => {

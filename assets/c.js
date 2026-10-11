@@ -21,20 +21,20 @@
   }
 
   const QUESTIONS = [
-    { key: "name", ask: function () { return "What do you call this rabbit?"; }, hint: "A name or an ear tag is fine." },
+    { key: "name", ask: function () { return "What is this rabbit's name or ear tag?"; }, hint: "Use whatever you go by to tell this rabbit apart." },
     { key: "sex", ask: function () { return "Is " + who() + " a doe or a buck?"; } },
     { key: "birthDate", ask: function () { return "When was " + who() + " born?"; } },
     { key: "color", ask: function () { return "What color is " + who() + "?"; } },
-    { key: "status", ask: function () { return "What is " + who() + " doing in the herd?"; } },
-    { key: "breedType", ask: function () { return "Is " + who() + " purebred or a cross?"; } },
+    { key: "status", ask: function () { return "What is " + who() + "'s status in your herd?"; } },
+    { key: "breedType", ask: function () { return "Is " + who() + " purebred or crossbred?"; } },
     {
       key: "breed",
       ask: function () {
-        return draft.breedType === "crossbred" ? "Which breeds are in " + who() + "'s mix?" : "Which breed is " + who() + "?";
+        return draft.breedType === "crossbred" ? "Which breeds make up " + who() + "'s mix?" : "Which breed is " + who() + "?";
       },
     },
     { key: "relatives", optional: true, ask: function () { return "Do you know any of " + who() + "'s relatives?"; } },
-    { key: "review", ask: function () { return "Does this look right?"; } },
+    { key: "review", ask: function () { return "Please check " + who() + "'s details"; }, hint: "If something needs changing, use Back to return to it." },
   ];
   draft.step = Math.min(Math.max(Number(draft.step) || 0, 0), QUESTIONS.length - 1);
 
@@ -60,7 +60,7 @@
       return "Save " + who();
     }
     if (question.optional && !filled(question)) {
-      return "Skip";
+      return "Skip this step";
     }
     return "Next";
   }
@@ -84,7 +84,7 @@
       (draft.step > 0 ? '<button type="button" class="' + BACK + '" data-nav="back">Back</button>' : "") +
       '<button type="submit" class="' + NEXT + '" data-next>' + P.esc(nextLabel(question)) + "</button>" +
       "</div></div></form>" +
-      '<p class="mt-4 text-sm text-neutral-600"><button type="button" class="underline" data-nav="restart">Start over</button> · Saved on this device.</p>';
+      '<p class="mt-4 text-sm text-neutral-600"><button type="button" class="underline" data-nav="restart">Start over</button> · Your answers are saved on this device as you go.</p>';
     P.refreshLive(app, draft);
     const target = focusId ? document.getElementById(focusId) : null;
     if (target) {
@@ -114,9 +114,9 @@
       const rabbit = P.finish(FLOW, draft);
       app.innerHTML = '<section class="mt-4 rounded-2xl border border-green-700 bg-white p-6 text-center shadow-sm" role="status">' +
         '<p class="text-5xl" aria-hidden="true">🐇</p>' +
-        '<h1 class="mt-2 text-2xl font-semibold focus:outline-none" tabindex="-1" id="done-heading">' + P.esc(rabbit.name) + " was added.</h1>" +
-        '<p class="mt-2 text-neutral-700">' + P.esc(rabbit.breedLine) + ". Saved on this device.</p>" +
-        '<div class="mt-6 flex flex-col gap-3"><a class="' + NEXT + '" href="../">See the herd</a><a class="' + BACK + '" href="./">Add another</a></div></section>';
+        '<h1 class="mt-2 text-2xl font-semibold focus:outline-none" tabindex="-1" id="done-heading">' + P.esc(rabbit.name) + " has been added to your herd.</h1>" +
+        '<p class="mt-2 text-neutral-700">Breed: ' + P.esc(rabbit.breedLine) + ". This demo saves only on this device.</p>" +
+        '<div class="mt-6 flex flex-col gap-3"><a class="' + NEXT + '" href="../">View the herd</a><a class="' + BACK + '" href="./">Add another rabbit</a></div></section>';
       document.getElementById("done-heading").focus();
       return;
     }
@@ -132,7 +132,7 @@
     }
     if (nav.getAttribute("data-nav") === "back") {
       go(draft.step - 1);
-    } else if (nav.getAttribute("data-nav") === "restart" && window.confirm("Clear this draft and start over?")) {
+    } else if (nav.getAttribute("data-nav") === "restart" && window.confirm("Start over? This clears everything you've entered for this rabbit.")) {
       P.clearDraft(FLOW);
       const fresh = P.getDraft(FLOW);
       Object.keys(draft).forEach(function (key) { delete draft[key]; });

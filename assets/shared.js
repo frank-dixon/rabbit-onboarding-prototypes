@@ -18,25 +18,25 @@
   const BREEDS = window.RabbitBreeds;
   const BREED_NAMES = new Set(BREEDS.arba.concat(BREEDS.other));
 
-  const SEXES = [["doe", "Doe"], ["buck", "Buck"]];
+  const SEXES = [["doe", "Doe", "Female"], ["buck", "Buck", "Male"]];
   const STATUSES = [
-    ["breeding", "Breeding"],
-    ["growing", "Growing out"],
-    ["sold", "Sold"],
-    ["culled", "Culled"],
+    ["breeding", "Breeding", "Kept for breeding."],
+    ["growing", "Growing out", "A young rabbit you're raising before deciding whether to keep it."],
+    ["sold", "Sold", "Sold to someone else."],
+    ["culled", "Culled", "Removed from the herd."],
   ];
   const BREED_TYPES = [
-    ["purebred", "Purebred", "One breed."],
-    ["crossbred", "Crossbred", "A mix of two or more breeds."],
+    ["purebred", "Purebred", "All one breed."],
+    ["crossbred", "Crossbred", "A mix of two or more breeds, each with a share in percent."],
   ];
   const RELATIONSHIPS = [
     ["dam", "Dam (mother)"],
     ["sire", "Sire (father)"],
-    ["sibling", "Full sibling"],
-    ["half_sibling", "Half sibling"],
-    ["offspring", "Offspring"],
-    ["granddam", "Granddam"],
-    ["grandsire", "Grandsire"],
+    ["sibling", "Full sibling (same dam and sire)"],
+    ["half_sibling", "Half sibling (one parent in common)"],
+    ["offspring", "Offspring (a kit or grown young)"],
+    ["granddam", "Granddam (grandmother)"],
+    ["grandsire", "Grandsire (grandfather)"],
     ["grandchild", "Grandchild"],
     ["aunt_uncle", "Aunt or uncle"],
     ["niece_nephew", "Niece or nephew"],
@@ -251,24 +251,26 @@
   }
 
   /* Check a slot that names a herd rabbit, an outside rabbit, or a new
-   * outside rabbit. sex, when given, is the sex the slot needs. */
-  function checkSlot(data, slot, sex, errors, key) {
+   * outside rabbit. sex, when given, is the sex the slot needs, and role
+   * names the place in words ("dam", "sire's dam") for the message.
+   * Messages state the rule first, then what to do. */
+  function checkSlot(data, slot, sex, errors, key, role) {
     const hasNew = Boolean(slot.newName && slot.newName.trim());
     if (slot.ref && hasNew) {
-      errors[key + ".newName"] = "Pick a rabbit from the list or type a new name, not both.";
+      errors[key + ".newName"] = "Each place holds one rabbit. Choose one from the list or add an outside rabbit, but not both.";
       return;
     }
     if (!hasNew && (slot.newDetails || "").trim()) {
-      errors[key + ".newName"] = "Add a name for this outside rabbit.";
+      errors[key + ".newName"] = "An outside rabbit needs a name. Add a name, or clear the details.";
       return;
     }
     if (slot.ref) {
       const found = resolveRef(data, slot.ref);
       if (!found) {
-        errors[key + ".ref"] = "That rabbit is no longer in the list. Pick again.";
+        errors[key + ".ref"] = "That rabbit is no longer in your list. Please choose again.";
       } else if (sex && found.kind === "h" && found.item.sex !== sex) {
-        errors[key + ".ref"] =
-          found.item.name + " is a " + found.item.sex + ". This place needs a " + sex + ".";
+        errors[key + ".ref"] = "The " + role + " has to be a " + sex + ". " + found.item.name +
+          " is a " + found.item.sex + ", so pick a " + sex + " here.";
       }
     }
   }
@@ -280,26 +282,26 @@
     const errors = {};
     keys.forEach(function (key) {
       if (key === "name" && !draft.name.trim()) {
-        errors.name = "Enter a name or ear tag.";
+        errors.name = "Each rabbit needs a name or an ear tag. Please add one.";
       }
       if (key === "sex" && !["doe", "buck"].includes(draft.sex)) {
-        errors.sex = "Choose doe or buck.";
+        errors.sex = "Each rabbit is recorded as a doe or a buck. Please choose one.";
       }
       if (key === "birthDate") {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.birthDate)) {
-          errors.birthDate = "Enter a birth date.";
+          errors.birthDate = "A birth date is required. Please pick one from the calendar.";
         } else if (draft.birthDate > today()) {
-          errors.birthDate = "Birth date cannot be in the future.";
+          errors.birthDate = "The birth date can't be in the future. Please pick today or an earlier date.";
         }
       }
       if (key === "color" && !draft.color.trim()) {
-        errors.color = "Enter a color.";
+        errors.color = "A coat color helps tell rabbits apart, so it's required. Please describe the color.";
       }
       if (key === "status" && !STATUSES.some(function (s) { return s[0] === draft.status; })) {
-        errors.status = "Choose a status.";
+        errors.status = "Each rabbit needs a status. Please choose one.";
       }
       if (key === "breedType" && !["purebred", "crossbred"].includes(draft.breedType)) {
-        errors.breedType = "Choose purebred or crossbred.";
+        errors.breedType = "Each rabbit is either purebred or crossbred. Please choose one.";
       }
       if (key === "breed") {
         validateBreed(draft, errors);
@@ -310,20 +312,21 @@
         draft.relatives.forEach(function (row, index) {
           const base = "relatives." + index;
           if (!row.relationship) {
-            errors[base + ".relationship"] = "Choose how this rabbit is related.";
+            errors[base + ".relationship"] = "Each relative needs a relationship. Please choose how this rabbit is related.";
           } else if (row.relationship === "dam" || row.relationship === "sire") {
             if (parentSeen[row.relationship]) {
-              errors[base + ".relationship"] = "A rabbit has only one " + row.relationship +
-                ". Relative " + parentSeen[row.relationship] + " is already the " + row.relationship + ".";
+              errors[base + ".relationship"] = "A rabbit can have only one " + row.relationship +
+                ", and Relative " + parentSeen[row.relationship] + " is already listed as the " +
+                row.relationship + ". Choose a different relationship here.";
             } else {
               parentSeen[row.relationship] = index + 1;
             }
           }
           if (!slotFilled(row)) {
-            errors[base + ".ref"] = "Pick a rabbit or type an outside rabbit's name.";
+            errors[base + ".ref"] = "Each relative needs a rabbit. Choose one from the list or add an outside rabbit.";
           } else {
             const sex = row.relationship === "dam" ? "doe" : row.relationship === "sire" ? "buck" : "";
-            checkSlot(data, row, sex, errors, base);
+            checkSlot(data, row, sex, errors, base, row.relationship);
           }
         });
       }
@@ -335,7 +338,7 @@
           }
           const slot = draft.pedigree[position];
           if (slot) {
-            checkSlot(data, slot, expectedSex(position), errors, "pedigree." + position);
+            checkSlot(data, slot, expectedSex(position), errors, "pedigree." + position, positionLabel(position).toLowerCase());
           }
         });
       }
@@ -346,12 +349,12 @@
   function validateBreed(draft, errors) {
     if (draft.breedType === "purebred") {
       if (!BREED_NAMES.has(draft.purebred)) {
-        errors.purebred = "Choose a breed from the list.";
+        errors.purebred = "A purebred rabbit needs a breed from the list. Please choose one.";
       }
       return;
     }
     if (draft.breedType !== "crossbred") {
-      errors.breedType = "Choose purebred or crossbred first.";
+      errors.breedType = "The breed choices depend on whether the rabbit is purebred or crossbred. Please choose that first.";
       return;
     }
     const seen = new Set();
@@ -364,20 +367,20 @@
       }
       used += 1;
       if (!BREED_NAMES.has(row.breed)) {
-        errors[base + ".breed"] = "Choose a breed.";
+        errors[base + ".breed"] = "Each row in the mix needs a breed. Please choose one, or clear the share.";
       } else if (seen.has(row.breed)) {
-        errors[base + ".breed"] = "Each breed can appear once.";
+        errors[base + ".breed"] = "Each breed can be listed only once in a mix. Please choose a different breed, or combine the shares.";
       }
       seen.add(row.breed);
       const value = Number(row.percent);
       if (!Number.isInteger(value) || value < 1 || value > 99) {
-        errors[base + ".percent"] = "Use a whole number from 1 to 99.";
+        errors[base + ".percent"] = "Each share is a whole number from 1 to 99. Please adjust this share.";
       }
     });
     if (used < 2) {
-      errors.cross = "A cross needs at least two breeds.";
+      errors.cross = "A crossbred rabbit has at least two breeds. Please add another breed to the mix.";
     } else if (crossTotal(draft) !== 100) {
-      errors.cross = "The percentages add up to " + crossTotal(draft) + "%. They must total 100%.";
+      errors.cross = "The shares need to add up to exactly 100%, and right now they add up to " + crossTotal(draft) + "%. Please adjust the shares.";
     }
   }
 
@@ -534,12 +537,12 @@
   function breedOptions() {
     return [
       { group: "ARBA recognized (" + BREEDS.arba.length + ")", items: BREEDS.arba.map(function (name) { return [name, name]; }) },
-      { group: "Other breeds, not ARBA (" + BREEDS.other.length + ")", items: BREEDS.other.map(function (name) { return [name, name]; }) },
+      { group: "Other recognized breeds (" + BREEDS.other.length + ")", items: BREEDS.other.map(function (name) { return [name, name]; }) },
     ];
   }
 
   function breedSourceNote() {
-    return "Breed list: " + BREEDS.sources.map(function (source) {
+    return "The breed list comes from the " + BREEDS.sources.map(function (source) {
       return '<a class="underline" href="' + source.url + '" target="_blank" rel="noopener">' + esc(source.label) + "</a>";
     }).join(" and ") + ".";
   }
@@ -561,24 +564,24 @@
       groups.push({ group: sex ? "In your herd (" + (sex === "doe" ? "does" : "bucks") + ")" : "In your herd", items: herd });
     }
     if (outside.length) {
-      groups.push({ group: "Outside rabbits you've entered", items: outside });
+      groups.push({ group: "Outside rabbits you've added before", items: outside });
     }
     const big = opts.large;
     return '<div class="space-y-3">' +
       selectField(path + ".ref", label, slot.ref || "", groups, {
         large: big,
-        placeholder: "Not in the list",
+        placeholder: "Choose a rabbit…",
         labelClass: opts.labelClass,
       }) +
       // The new-rabbit fields sit in a native disclosure so a pedigree of
       // 14 places stays readable. It opens by itself when it holds a name.
       '<details class="rounded border border-dashed border-neutral-300 px-3 py-2"' + (slot.newName || slot.newDetails ? " open" : "") + ">" +
-      '<summary class="cursor-pointer text-sm font-medium text-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">Not in the list? Add an outside rabbit</summary>' +
+      '<summary class="cursor-pointer text-sm font-medium text-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">Not listed? Add an outside rabbit</summary>' +
       '<div class="mt-2 space-y-3">' +
       textField(path + ".newName", "Outside rabbit's name", slot.newName || "", { large: false }) +
       textField(path + ".newDetails", "Details (optional)", slot.newDetails || "", {
         large: false,
-        help: "Ear tag, registration number, breeder, or color.",
+        help: "Anything that helps identify it, like an ear tag, registration number, breeder, or color.",
       }) +
       "</div></details></div>";
   }
@@ -596,9 +599,12 @@
       case "sex":
         return choiceField("sex", "Sex", draft.sex, SEXES, { large: big, quiet: opts.quiet });
       case "birthDate":
-        return textField("birthDate", "Birth date", draft.birthDate, { large: big, quiet: opts.quiet, type: "date", max: today() });
+        return textField("birthDate", "Birth date", draft.birthDate, {
+          large: big, quiet: opts.quiet, type: "date", max: today(),
+          help: "Pick the date from the calendar. If you only know the month, choose the 1st.",
+        });
       case "color":
-        return textField("color", "Color", draft.color, { large: big, quiet: opts.quiet, help: "For example: broken black, chestnut agouti." });
+        return textField("color", "Color", draft.color, { large: big, quiet: opts.quiet, help: "Describe the coat, for example broken black or chestnut agouti." });
       case "status":
         return choiceField("status", "Status", draft.status, STATUSES, { large: big, quiet: opts.quiet });
       case "breedType":
@@ -619,8 +625,8 @@
     const rows = draft.cross.map(function (row, index) {
       const base = "cross." + index;
       return '<li class="grid grid-cols-[1fr_6rem] items-end gap-2 sm:grid-cols-[1fr_7rem_auto]">' +
-        selectField(base + ".breed", "Breed " + (index + 1), row.breed, breedOptions(), { large: false }) +
-        textField(base + ".percent", "Percent", row.percent, { type: "number", inputmode: "numeric" }) +
+        selectField(base + ".breed", "Breed " + (index + 1), row.breed, breedOptions(), { large: false, placeholder: "Choose a breed…" }) +
+        textField(base + ".percent", "Share (%)", row.percent, { type: "number", inputmode: "numeric" }) +
         (draft.cross.length > 2
           ? '<button type="button" class="' + BUTTON_SECONDARY + ' col-span-2 justify-center sm:col-span-1 sm:mb-6" data-action="remove-cross" data-index="' + index + '">Remove<span class="sr-only"> breed ' + (index + 1) + "</span></button>"
           : "") +
@@ -628,28 +634,28 @@
     }).join("");
     const total = crossTotal(draft);
     return '<div class="space-y-4">' +
-      '<p class="text-sm text-neutral-700" data-breed-hint' + (draft.breedType ? " hidden" : "") + ">Choose purebred or crossbred to pick breeds.</p>" +
+      '<p class="text-sm text-neutral-700" data-breed-hint' + (draft.breedType ? " hidden" : "") + ">Choose purebred or crossbred above, and the breed choices will appear here.</p>" +
       '<div data-breed-section="purebred"' + (draft.breedType === "purebred" ? "" : " hidden") + ">" +
-      selectField("purebred", "Breed", draft.purebred, breedOptions(), { large: big, help: breedSourceNote() }) +
+      selectField("purebred", "Breed", draft.purebred, breedOptions(), { large: big, help: breedSourceNote(), placeholder: "Choose a breed…" }) +
       "</div>" +
       '<div data-breed-section="crossbred"' + (draft.breedType === "crossbred" ? "" : " hidden") + ">" +
       '<fieldset id="' + idFor("cross") + '"><legend class="' + (big ? LABEL_LARGE : LABEL) + '">Breeds in the mix</legend>' +
-      '<p class="mt-1 text-sm text-neutral-600">Give each breed a share. The shares must total 100%. ' + breedSourceNote() + "</p>" +
+      '<p class="mt-1 text-sm text-neutral-600">List each breed and its share. The shares need to add up to 100%. For example, a rabbit with a Rex sire and a Dutch dam is 50% Rex and 50% Dutch. ' + breedSourceNote() + "</p>" +
       '<ul class="mt-3 space-y-3">' + rows + "</ul>" +
       '<div class="mt-3 flex flex-wrap items-center justify-between gap-3">' +
-      '<button type="button" class="' + BUTTON_SECONDARY + '" data-action="add-cross">Add a breed</button>' +
+      '<button type="button" class="' + BUTTON_SECONDARY + '" data-action="add-cross">Add another breed</button>' +
       '<p class="rounded px-3 py-2 text-sm font-semibold ' + totalClass(total) + '" role="status" aria-live="polite" data-cross-total>' + totalText(total) + "</p>" +
       "</div>" + errorSlot("cross") + "</fieldset></div></div>";
   }
 
   function totalText(total) {
     if (total === 100) {
-      return "Total: 100%. Ready.";
+      return "Total: 100%. The mix adds up.";
     }
     if (total < 100) {
-      return "Total: " + total + "%. " + (100 - total) + "% to go.";
+      return "Total so far: " + total + "%. Add " + (100 - total) + "% more to reach 100%.";
     }
-    return "Total: " + total + "%. " + (total - 100) + "% too much.";
+    return "Total so far: " + total + "%. That's " + (total - 100) + "% over, so lower a share.";
   }
 
   function totalClass(total) {
@@ -669,13 +675,17 @@
       return '<li class="space-y-3 rounded-lg border border-neutral-300 bg-white p-3">' +
         '<div class="flex items-center justify-between gap-2"><h3 class="font-semibold">Relative ' + (index + 1) + "</h3>" +
         '<button type="button" class="' + BUTTON_SECONDARY + '" data-action="remove-relative" data-index="' + index + '">Remove<span class="sr-only"> relative ' + (index + 1) + "</span></button></div>" +
-        selectField(base + ".relationship", "Relationship", row.relationship, RELATIONSHIPS, { large: big }) +
+        selectField(base + ".relationship", "Relationship", row.relationship, RELATIONSHIPS, {
+          large: big,
+          placeholder: "Choose a relationship…",
+          help: "Dam means the mother and sire means the father.",
+        }) +
         slotFields(base, "Rabbit", row, { large: big }) +
         "</li>";
     }).join("");
     return '<div class="space-y-3">' +
-      '<p class="text-sm text-neutral-700">Optional. Link rabbits in your herd, or name outside rabbits.</p>' +
-      (rows ? '<ul class="space-y-3">' + rows + "</ul>" : '<p class="rounded border border-dashed border-neutral-400 px-3 py-4 text-sm text-neutral-600">No relatives added.</p>') +
+      '<p class="text-sm text-neutral-700">This step is optional. Add any relatives you know, whether they\'re in your herd or outside rabbits from another breeder.</p>' +
+      (rows ? '<ul class="space-y-3">' + rows + "</ul>" : '<p class="rounded border border-dashed border-neutral-400 px-3 py-4 text-sm text-neutral-600">No relatives added yet. You can add some now or skip this step.</p>') +
       '<button type="button" class="' + BUTTON_SECONDARY + (big ? " min-h-14 w-full justify-center text-lg" : "") + '" data-action="add-relative">Add a relative</button>' +
       "</div>";
   }
@@ -733,9 +743,9 @@
     };
     return '<dl class="divide-y divide-neutral-200 rounded-lg border border-neutral-300 bg-white">' +
       rows.map(function (row) {
-        return '<div class="grid grid-cols-3 gap-2 px-3 py-2"><dt class="font-medium">' + row[0] + '</dt><dd class="col-span-2">' + esc(row[1] || "—") + "</dd></div>";
+        return '<div class="grid grid-cols-3 gap-2 px-3 py-2"><dt class="font-medium">' + row[0] + '</dt><dd class="col-span-2">' + esc(row[1] || "Not given") + "</dd></div>";
       }).join("") +
-      '<div class="px-3 py-2"><dt class="font-medium">Relatives</dt><dd class="mt-1">' + list(relatives, "None") + "</dd></div>" +
+      '<div class="px-3 py-2"><dt class="font-medium">Relatives</dt><dd class="mt-1">' + list(relatives, "None added") + "</dd></div>" +
       (opts.pedigree === false ? "" : '<div class="px-3 py-2"><dt class="font-medium">Pedigree (' + pedigree.length + " of " + PEDIGREE.length + ' places)</dt><dd class="mt-1">' + list(pedigree, "None") + "</dd></div>") +
       "</dl>";
   }
@@ -868,7 +878,7 @@
     });
     if (summary) {
       summary.hidden = false;
-      summary.innerHTML = '<h2 class="font-semibold">Please fix ' + (keys.length === 1 ? "this" : "these " + keys.length) + ":</h2>" +
+      summary.innerHTML = '<h2 class="font-semibold">' + (keys.length === 1 ? "Please check one thing before continuing:" : "Please check these " + keys.length + " things before continuing:") + "</h2>" +
         '<ul class="mt-2 list-disc pl-5">' + keys.map(function (key) {
           return '<li><a class="underline" href="#' + idFor(key) + '">' + esc(errors[key]) + "</a></li>";
         }).join("") + "</ul>";
